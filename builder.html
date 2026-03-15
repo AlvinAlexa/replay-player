@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Replay Player — URL Builder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0a0c10;--surf:#111318;--card:#161921;--bdr:#1e2230;
+      --acc:#e8b020;--red:#f04040;--green:#2ec060;
+      --txt:#e4e8f0;--muted:#5a6070;--tabbg:#181c26;
+    }
+    body{background:var(--bg);color:var(--txt);font-family:'Barlow',sans-serif;min-height:100vh;padding:0 0 60px}
+
+    /* HEADER */
+    header{
+      background:var(--surf);border-bottom:2px solid var(--acc);
+      padding:14px 24px;display:flex;align-items:center;gap:12px;
+    }
+    .logo{
+      width:36px;height:36px;background:var(--acc);border-radius:7px;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .logo svg{width:20px;height:20px;fill:#0a0c10}
+    h1{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+    h1 span{color:var(--acc)}
+    .back{
+      margin-left:auto;
+      background:var(--tabbg);border:1px solid var(--bdr);border-radius:5px;
+      color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+      padding:6px 14px;cursor:pointer;text-decoration:none;
+      transition:all .18s;
+    }
+    .back:hover{color:var(--txt);border-color:var(--acc)}
+
+    /* MAIN */
+    main{max-width:700px;margin:32px auto;padding:0 20px}
+
+    .card{
+      background:var(--card);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;
+      margin-bottom:20px;
+    }
+    .card-head{
+      padding:14px 18px;background:var(--surf);border-bottom:1px solid var(--bdr);
+      display:flex;align-items:center;gap:10px;
+    }
+    .card-head h2{
+      font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;
+      letter-spacing:.8px;text-transform:uppercase;color:var(--acc);
+    }
+    .step-num{
+      width:24px;height:24px;border-radius:50%;
+      background:var(--acc);color:#0a0c10;
+      font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .card-body{padding:18px}
+
+    /* BASE URL */
+    .base-row{display:flex;gap:8px;align-items:center}
+    .base-input{
+      flex:1;background:var(--bg);border:1px solid var(--bdr);border-radius:6px;
+      color:var(--txt);font-family:monospace;font-size:12px;
+      padding:9px 12px;outline:none;transition:border-color .2s;
+    }
+    .base-input:focus{border-color:var(--acc)}
+    .base-input::placeholder{color:var(--muted)}
+    .hint{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.6}
+    .hint code{color:var(--acc);background:rgba(232,176,32,.08);padding:1px 5px;border-radius:3px}
+
+    /* URL ROWS */
+    .url-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+    .url-row{display:flex;gap:6px;align-items:center}
+    .rnum{
+      font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;
+      color:var(--acc);min-width:22px;text-align:center;
+    }
+    .rinput{
+      flex:1;background:var(--bg);border:1px solid var(--bdr);border-radius:6px;
+      color:var(--txt);font-family:monospace;font-size:12px;
+      padding:9px 12px;outline:none;transition:border-color .2s;
+    }
+    .rinput:focus{border-color:var(--acc)}
+    .rinput::placeholder{color:var(--muted)}
+    .rmdel{
+      background:none;border:1px solid var(--bdr);border-radius:5px;
+      color:var(--muted);padding:7px 10px;cursor:pointer;font-size:13px;
+      transition:all .18s;flex-shrink:0;
+    }
+    .rmdel:hover{border-color:var(--red);color:var(--red)}
+
+    /* BUTTONS */
+    .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+    .btn-add{
+      background:var(--tabbg);border:1px solid var(--bdr);border-radius:6px;
+      color:var(--txt);font-family:'Barlow Condensed',sans-serif;
+      font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+      padding:8px 16px;cursor:pointer;transition:all .18s;
+    }
+    .btn-add:hover{border-color:var(--acc);color:var(--acc)}
+    .btn-gen{
+      background:var(--acc);border:none;border-radius:6px;
+      color:#0a0c10;font-family:'Barlow Condensed',sans-serif;
+      font-size:14px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
+      padding:9px 22px;cursor:pointer;transition:opacity .18s;
+    }
+    .btn-gen:hover{opacity:.88}
+
+    /* RESULT */
+    .result{
+      display:none;
+      background:var(--bg);border:1px solid var(--bdr);border-radius:8px;
+      padding:14px 16px;margin-top:16px;
+    }
+    .result.show{display:block}
+    .rlabel{
+      font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+      color:var(--muted);margin-bottom:8px;
+    }
+    .rurl{
+      font-family:monospace;font-size:11px;color:var(--acc);
+      word-break:break-all;line-height:1.8;
+      background:none;border:none;outline:none;width:100%;resize:none;padding:0;cursor:text;
+    }
+    .copy-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .btn-copy{
+      background:var(--surf);border:1px solid var(--bdr);border-radius:5px;
+      color:var(--txt);font-family:'Barlow Condensed',sans-serif;
+      font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+      padding:6px 16px;cursor:pointer;transition:all .18s;
+    }
+    .btn-copy:hover{border-color:var(--acc);color:var(--acc)}
+    .btn-copy.ok{border-color:var(--green);color:var(--green)}
+
+    /* IFRAME SNIPPET */
+    .snippet{
+      background:var(--bg);border:1px solid var(--bdr);border-radius:6px;
+      padding:12px 14px;
+    }
+    .snippet pre{
+      font-family:monospace;font-size:11px;color:#7ec8a4;
+      white-space:pre-wrap;word-break:break-all;line-height:1.8;
+    }
+
+    /* PREVIEW */
+    .preview-frame{
+      width:100%;aspect-ratio:16/9;border:none;border-radius:6px;
+      background:#000;display:block;
+    }
+
+    /* INFO BOX */
+    .info{
+      padding:11px 14px;
+      background:rgba(232,176,32,.06);border-left:3px solid var(--acc);
+      border-radius:0 6px 6px 0;
+      font-size:12px;color:var(--muted);line-height:1.7;margin-top:14px;
+    }
+    .info strong{color:var(--txt)}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+  <h1>Replay <span>Builder</span></h1>
+  <a class="back" href="index.html">&#9654; Open Player</a>
+</header>
+
+<main>
+
+  <!-- STEP 1: Base URL -->
+  <div class="card">
+    <div class="card-head">
+      <div class="step-num">1</div>
+      <h2>Your Player Base URL</h2>
+    </div>
+    <div class="card-body">
+      <div class="base-row">
+        <input class="base-input" id="base" type="text"
+          placeholder="https://YOUR-USERNAME.github.io/replay-player/"
+          value=""/>
+      </div>
+      <div class="hint">
+        Enter your GitHub Pages URL. Example: <code>https://alvinalexa.github.io/replay-player/</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Video URLs -->
+  <div class="card">
+    <div class="card-head">
+      <div class="step-num">2</div>
+      <h2>Add Video Parts</h2>
+    </div>
+    <div class="card-body">
+      <div class="url-rows" id="urlrows"></div>
+      <div class="btns">
+        <button class="btn-add" onclick="addRow()">+ Add Part</button>
+        <button class="btn-gen" onclick="generate()">&#9654; Generate Link</button>
+      </div>
+
+      <div class="result" id="result">
+        <div class="rlabel">&#9654; Your encoded player URL:</div>
+        <textarea class="rurl" id="rurl" rows="4" readonly></textarea>
+        <div class="copy-row">
+          <button class="btn-copy" id="cbtn" onclick="copyUrl()">&#128203; Copy URL</button>
+          <button class="btn-copy" id="cbtn2" onclick="copyIframe()">&#128203; Copy Iframe Code</button>
+        </div>
+      </div>
+
+      <div class="info">
+        <strong>Why encode?</strong> Dailymotion URLs contain <code style="color:var(--acc)">&amp;</code> and <code style="color:var(--acc)">?</code> characters.
+        Without encoding, the browser misreads them as separate parameters — causing "Content ID not found" errors.
+        This builder uses <code style="color:var(--acc)">encodeURIComponent()</code> to fix that automatically.
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Embed code -->
+  <div class="card" id="iframeCard" style="display:none">
+    <div class="card-head">
+      <div class="step-num">3</div>
+      <h2>Paste This Into Blogger</h2>
+    </div>
+    <div class="card-body">
+      <div class="snippet">
+        <pre id="iframesnippet"></pre>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn-copy" id="cbtn3" onclick="copyIframeSnippet()">&#128203; Copy Blogger Code</button>
+      </div>
+      <div class="info" style="margin-top:14px">
+        In Blogger: open your post → click <strong>HTML view</strong> → paste where you want the player to appear.
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Preview -->
+  <div class="card" id="previewCard" style="display:none">
+    <div class="card-head">
+      <div class="step-num">4</div>
+      <h2>Live Preview</h2>
+    </div>
+    <div class="card-body">
+      <iframe class="preview-frame" id="previewFrame" src="" allowfullscreen
+        sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation allow-popups allow-presentation allow-popups-to-escape-sandbox"
+        allow="autoplay; fullscreen; encrypted-media; picture-in-picture">
+      </iframe>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const urlrows = document.getElementById('urlrows');
+
+function addRow(val){
+  const i = urlrows.children.length+1;
+  const row = document.createElement('div');
+  row.className='url-row';
+  row.innerHTML=
+    '<span class="rnum">'+i+'</span>'+
+    '<input class="rinput" type="text" placeholder="https://geo.dailymotion.com/player.html?video=XXXXXX" value="'+(val||'')+'"/>'+
+    '<button class="rmdel" onclick="delRow(this)" title="Remove">&#x2715;</button>';
+  urlrows.appendChild(row);
+  renumber();
+}
+
+function delRow(btn){
+  btn.closest('.url-row').remove();
+  renumber();
+}
+
+function renumber(){
+  document.querySelectorAll('.rnum').forEach((el,i)=>el.textContent=i+1);
+}
+
+function getBase(){
+  let b = document.getElementById('base').value.trim();
+  if(!b) b = window.location.origin + window.location.pathname.replace('builder.html','');
+  if(!b.endsWith('/')) b+='/';
+  return b;
+}
+
+function generate(){
+  const inputs = urlrows.querySelectorAll('.rinput');
+  const urls = Array.from(inputs).map(i=>i.value.trim()).filter(Boolean);
+  if(!urls.length){alert('Please add at least one video URL.');return;}
+
+  const base   = getBase();
+  const params = urls.map(u=>'embed='+encodeURIComponent(u)).join('&');
+  const full   = base+'?'+params;
+
+  document.getElementById('rurl').value = full;
+  document.getElementById('result').classList.add('show');
+
+  // Iframe snippet
+  const snippet = `<iframe\n  src="${full}"\n  width="100%"\n  height="500"\n  frameborder="0"\n  scrolling="no"\n  allowfullscreen="allowfullscreen"\n  sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation allow-popups allow-presentation allow-popups-to-escape-sandbox"\n  allow="autoplay; fullscreen; encrypted-media; picture-in-picture">\n</iframe>`;
+  document.getElementById('iframesnippet').textContent = snippet;
+  document.getElementById('iframeCard').style.display='block';
+
+  // Preview
+  document.getElementById('previewFrame').src = full;
+  document.getElementById('previewCard').style.display='block';
+
+  ['cbtn','cbtn2','cbtn3'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.remove('ok');
+    el.textContent = el.id==='cbtn'?'📋 Copy URL':el.id==='cbtn2'?'📋 Copy Iframe Code':'📋 Copy Blogger Code';
+  });
+}
+
+function cp(text, btnId){
+  const done=()=>{
+    const b=document.getElementById(btnId);
+    b.textContent='✓ Copied!'; b.classList.add('ok');
+    setTimeout(()=>{ b.classList.remove('ok'); }, 2500);
+  };
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(done).catch(()=>{fallback(text);done();});
+  } else {
+    fallback(text); done();
+  }
+}
+function fallback(t){
+  const ta=document.createElement('textarea');
+  ta.value=t; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  document.execCommand('copy'); document.body.removeChild(ta);
+}
+
+function copyUrl(){     cp(document.getElementById('rurl').value,'cbtn'); }
+function copyIframe(){  cp(document.getElementById('iframesnippet').textContent,'cbtn2'); }
+function copyIframeSnippet(){ cp(document.getElementById('iframesnippet').textContent,'cbtn3'); }
+
+// Init with 2 rows
+addRow(); addRow();
+
+// Auto-fill base from current location
+const base = window.location.origin + window.location.pathname.replace('builder.html','');
+document.getElementById('base').value = base;
+</script>
+</body>
+</html>
